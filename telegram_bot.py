@@ -1,5 +1,6 @@
 import logging
 import os
+import json
 from telegram import Update, ReplyKeyboardMarkup
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackContext, ConversationHandler
 from oauth2client.service_account import ServiceAccountCredentials
@@ -10,10 +11,21 @@ import datetime
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Настройка Google Sheets
+# Настройка Google Sheets из переменной окружения
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope)
+
+# Чтение JSON-данных из переменной окружения
+credentials_json = os.getenv('GOOGLE_CREDENTIALS_JSON')
+
+if credentials_json is None:
+    raise ValueError("GOOGLE_CREDENTIALS_JSON environment variable not set")
+
+# Преобразование JSON-данных в словарь
+credentials_info = json.loads(credentials_json)
+creds = ServiceAccountCredentials.from_json_keyfile_dict(credentials_info, scope)
 client = gspread.authorize(creds)
+
+# Открытие таблицы Google Sheets
 spreadsheet_id = "1MTFF7XKkoTIOlXlYUb9dDo9zwupYpM7Efx00AFHk86Y"  # Замените на ваш ID таблицы
 sheet = client.open_by_key(spreadsheet_id).worksheet("Траты")
 
@@ -189,7 +201,7 @@ async def handle_message(update: Update, context: CallbackContext) -> int:
     return ConversationHandler.END
 
 def main() -> None:
-    token = "7314973355:AAEj0eaGsd2CSnJ_-WZT9yPCAIRDb6WP5rw"  # Замените на реальный токен
+    token = os.getenv("TELEGRAM_BOT_TOKEN")  # Используем переменную окружения для токена
 
     if not token:
         raise ValueError("No TELEGRAM_BOT_TOKEN environment variable set")
