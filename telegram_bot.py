@@ -20,6 +20,11 @@ sheet = client.open_by_key(spreadsheet_id).worksheet("Траты")
 # Константы для этапов разговора
 ENTER_AMOUNT, CHOOSE_DATE_OPTION, ENTER_DATE, CHOOSE_PAYER, CHOOSE_PAYMENT_OPTION, CHOOSE_PAYMENT_METHOD, ENTER_PLACE, CHOOSE_CATEGORY = range(8)
 
+# Вспомогательная функция для разбивки списка на подсписки фиксированного размера
+def chunks(lst, n):
+    for i in range(0, len(lst), n):
+        yield lst[i:i + n]
+
 # Стартовый обработчик
 async def start(update: Update, context: CallbackContext) -> int:
     context.user_data.clear()  # Очистка предыдущих данных
@@ -129,7 +134,11 @@ async def choose_payment_method(update: Update, context: CallbackContext) -> int
 # Обработчик ввода места покупки
 async def enter_place(update: Update, context: CallbackContext) -> int:
     context.user_data['place'] = update.message.text
-    reply_keyboard = [['Транспорт', 'Продукты', 'Кафе', 'Товары', 'Жильё', 'Документы', 'Связь', 'Досуг', 'Комиссия', 'Путешествия', 'Подарки', 'Спорт']]
+    categories = ['Транспорт', 'Продукты', 'Кафе', 'Товары', 'Жильё', 'Документы', 'Связь', 'Досуг', 'Комиссия', 'Путешествия', 'Подарки', 'Спорт']
+    
+    # Разбиваем список категорий на строки по три кнопки
+    reply_keyboard = list(chunks(categories, 3))
+    
     await update.message.reply_text(
         "Выбери категорию:",
         reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True)
